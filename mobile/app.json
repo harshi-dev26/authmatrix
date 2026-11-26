@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "AuthMatrix",
+    "slug": "authmatrix-companion",
+    "version": "2.0.0",
+    "orientation": "default",
+    "userInterfaceStyle": "light",
+    "platforms": ["ios", "android"],
+    "plugins": ["expo-secure-store"]
+  }
+}

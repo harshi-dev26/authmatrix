@@ -1,0 +1,57 @@
+{
+  "profiles": [
+    {
+      "userId": "stu-001",
+      "email": "maya@example.test",
+      "displayName": "Maya Rao",
+      "role": "student",
+      "provider": "Northstar Identity",
+      "externalId": "northstar-stu-001",
+      "tokenPayload": {
+        "iss": "https://northstar.example.test",
+        "sub": "northstar-stu-001",
+        "aud": "AuthMatrix Web",
+        "role": "student"
+      }
+    },
+    {
+      "userId": "adm-001",
+      "email": "alex@example.test",
+      "displayName": "Alex Chen",
+      "role": "admin",
+      "provider": "Northstar Identity",
+      "externalId": "northstar-adm-001",
+      "tokenPayload": {
+        "iss": "https://northstar.example.test",
+        "sub": "northstar-adm-001",
+        "aud": "AuthMatrix Web",
+        "role": "admin"
+      }
+    }
+  ],
+  "totpSecrets": [
+    {
+      "userId": "stu-001",
+      "secret": "IF2XI2CNMF2HE2LYFVSGK3LPFVZXI5LEMVXHI",
+      "periodSeconds": 30
+    },
+    {
+      "userId": "adm-001",
+      "secret": "IF2XI2CNMF2HE2LYFVSGK3LPFVQWI3LJNY",
+      "periodSeconds": 30
+    }
+  ],
+  "prompts": [
+    {
+      "userId": "stu-001",
+      "provider": "Northstar Identity",
+      "device": "Web browser",
+      "requestId": "mobile-001"
+    }
+  ],
+  "verification": {
+    "algorithm": "SHA1",
+    "digits": 6,
+    "periodSeconds": 30
+  }
+}

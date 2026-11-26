@@ -1,0 +1,20 @@
+{
+  "name": "authmatrix-companion",
+  "version": "2.0.0",
+  "private": true,
+  "main": "node_modules/expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start"
+  },
+  "dependencies": {
+    "expo": "~58.0.26",
+    "react": "19.3.0",
+    "react-native": "0.88.1",
+    "expo-secure-store": "~58.0.3",
+    "expo-clipboard": "~58.0.4",
+    "expo-crypto": "~58.0.8",
+    "@expo/vector-icons": "^15.0.2",
+    "expo-font": "~58.0.12",
+    "react-native-safe-area-context": "~5.11.1"
+  }
+}
