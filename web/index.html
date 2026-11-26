@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AuthMatrix · Identity workspace</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+    <link rel="stylesheet" href="./css/styles.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header>
+      <nav class="navbar navbar-expand-sm container shell" aria-label="Main navigation">
+        <a class="brand" href="#signin"
+          ><span class="mark" aria-hidden="true">A</span> AuthMatrix</a
+        >
+        <div id="links" class="navlinks"><a href="#help">About / Help</a></div>
+      </nav>
+    </header>
+    <main class="container shell" id="main" tabindex="-1">
+      <div id="feedback" aria-live="polite" aria-atomic="true"></div>
+      <div id="view">
+        <p role="status"><span class="spinner-border"></span> Loading sample workspace…</p>
+      </div>
+    </main>
+    <footer>
+      <div class="container shell">
+        <span>AuthMatrix <span class="dot">/</span> Educational prototype</span
+        ><button class="textbtn" data-action="reset">
+          <i class="bi bi-arrow-counterclockwise"></i> Reset Sample Data
+        </button>
+      </div>
+    </footer>
+    <dialog id="resetDialog" class="modal-content" aria-labelledby="reset-title">
+      <h2 id="reset-title">Reset sample data?</h2>
+      <p>This restores the demo accounts and approvals and clears your session history.</p>
+      <div class="actions">
+        <button data-action="close">Cancel</button
+        ><button class="primary" data-action="confirm-reset">Reset Sample Data</button>
+      </div>
+    </dialog>
+    <template id="loginView"
+      ><div class="welcome row g-0">
+        <section class="intro col-lg-6">
+          <div class="eyebrow"><span class="tinyline"></span> Identity workspace</div>
+          <h1>One sign-in.<br />Two roles.</h1>
+          <p>Explore how identity, permissions, and single sign-on work with a sample account.</p>
+          <div class="diagram" aria-hidden="true">
+            <div class="orbit o1"></div>
+            <div class="orbit o2"></div>
+            <div class="orbit o3"></div>
+            <div class="chip"><span class="lock"></span></div>
+            <span class="node n1">↗</span><span class="node n2">✓</span>
+          </div>
+          <div class="introfoot">AuthMatrix <span>/</span> Extended Web v2</div>
+        </section>
+        <section class="login card col-lg-6">
+          <div class="eyebrow"><i class="bi bi-box-arrow-in-right"></i> Workspace access</div>
+          <h2>Sign in</h2>
+          <p>Use a sample account to enter the workspace.</p>
+          <form id="login" novalidate>
+            <label for="email">Email address</label
+            ><input
+              class="form-control"
+              id="email"
+              type="email"
+              autocomplete="off"
+              required
+              placeholder="name@example.test"
+              aria-describedby="email-error"
+            /><small class="error" id="email-error"></small> <label for="password">Password</label
+            ><input
+              class="form-control"
+              id="password"
+              type="password"
+              autocomplete="off"
+              required
+              placeholder="Enter demo password"
+              aria-describedby="password-error"
+            /><small class="error" id="password-error"></small
+            ><button class="primary wide" type="submit">
+              Sign in <span aria-hidden="true">→</span>
+            </button>
+          </form>
+          <div class="separator">or</div>
+          <button class="wide" data-action="partner">
+            <i class="bi bi-diagram-2"></i> Login with Partner
+          </button>
+          <fieldset>
+            <legend>Try a demo account</legend>
+            <div class="actions">
+              <button data-action="student">
+                <i class="bi bi-mortarboard"></i> Fill Student Demo</button
+              ><button data-action="admin-fill">
+                <i class="bi bi-shield-lock"></i> Fill Admin Demo
+              </button>
+            </div>
+          </fieldset>
+        </section>
+      </div></template
+    >
+    <script type="module">
+      if (location.protocol !== "file:") import("./js/app.js");
+    </script>
+    <!-- Bundled direct-file entry. Live Server uses js/app.js. -->
+    <script>
+      if (location.protocol === "file:") {
+        (async () => {
+          const fallback = {
+            users: [
+              {
+                userId: "stu-001",
+                email: "maya@example.test",
+                displayName: "Maya Rao",
+                role: "student",
+                passwordHash: "educational-placeholder:StudentDemo1",
+                createdAt: "2026-01-01T09:00:00Z",
+              },
+              {
+                userId: "adm-001",
+                email: "alex@example.test",
+                displayName: "Alex Chen",
+                role: "admin",
+                passwordHash: "educational-placeholder:AdminDemo1",
+                createdAt: "2026-01-01T09:00:00Z",
+              },
+            ],
+            approvals: [
+              {
+                requestId: "req-001",
+                userId: "stu-001",
+                userEmail: "maya@example.test",
+                role: "student",
+                status: "pending",
+                createdAt: "2026-01-02T10:00:00Z",
+              },
+            ],
+            totpSecrets: [
+              {
+                userId: "stu-001",
+                secret: "IF2XI2CNMF2HE2LYFVSGK3LPFVZXI5LEMVXHI",
+                periodSeconds: 30,
+              },
+              {
+                userId: "adm-001",
+                secret: "IF2XI2CNMF2HE2LYFVSGK3LPFVQWI3LJNY",
+                periodSeconds: 30,
+              },
+            ],
+          };
+          const keys = ["users", "session", "approvals", "prefs"];
+          const roleOk = (value) => ["student", "admin"].includes(value);
+          const strings = (value, fields) =>
+            fields.every((key) => typeof value?.[key] === "string" && value[key].length);
+          function sessionOk(s, users) {
+            return (
+              strings(s, ["sessionId", "userId", "createdAt"]) &&
+              Number.isFinite(Date.parse(s.createdAt)) &&
+              ["active", "ended"].includes(s.status) &&
+              users.some((u) => u.userId === s.userId && u.role === s.role)
+            );
+          }
+          function valid(data) {
+            const { users, session, approvals, prefs } = data;
+            return (
+              Array.isArray(users) &&
+              ["admin", "student"].every((role) => users.some((u) => u?.role === role)) &&
+              users.every(
+                (u) =>
+                  strings(u, ["userId", "email", "displayName", "passwordHash", "createdAt"]) &&
+                  roleOk(u.role)
+              ) &&
+              (session === null || sessionOk(session, users)) &&
+              Array.isArray(approvals) &&
+              approvals.every(
+                (a) =>
+                  strings(a, ["requestId", "userId", "userEmail", "createdAt"]) &&
+                  roleOk(a.role) &&
+                  ["pending", "approved", "denied"].includes(a.status)
+              ) &&
+              Array.isArray(prefs?.recentSessions) &&
+              prefs.recentSessions.every((s) => sessionOk(s, users))
+            );
+          }
+          class LocalDataStore {
+            seed = fallback;
+            defaults() {
+              return {
+                users: structuredClone(this.seed.users),
+                session: null,
+                approvals: structuredClone(this.seed.approvals),
+                prefs: { recentSessions: [] },
+              };
+            }
+            async init() {
+              try {
+                const response = await fetch("./data/sample-data.json");
+                if (response.ok) {
+                  const seed = await response.json();
+                  if (
+                    valid({
+                      users: seed.users,
+                      session: null,
+                      approvals: seed.approvals,
+                      prefs: { recentSessions: [] },
+                    })
+                  )
+                    this.seed = seed;
+                }
+              } catch {
+                /* Direct-file and offline launches use the bundled sample. */
+              }
+              this.load();
+            }
+            load() {
+              try {
+                const raw = keys.map((k) => localStorage.getItem("authmatrix_" + k));
+                if (raw.every((x) => x === null)) {
+                  this.reset();
+                  return;
+                }
+                if (raw.some((x) => x === null)) throw Error();
+                const next = Object.fromEntries(keys.map((k, i) => [k, JSON.parse(raw[i])]));
+                if (!valid(next)) throw Error();
+                this.data = next;
+                this.error = false;
+              } catch {
+                this.fail();
+              }
+            }
+            fail() {
+              this.error = true;
+              this.data = this.defaults();
+            }
+            write(changes) {
+              try {
+                for (const [k, v] of Object.entries(changes))
+                  localStorage.setItem("authmatrix_" + k, JSON.stringify(v));
+                Object.assign(this.data, changes);
+                this.error = false;
+                return true;
+              } catch {
+                this.fail();
+                return false;
+              }
+            }
+            reset() {
+              this.data = this.defaults();
+              return this.write(this.data);
+            }
+          }
+
+          function validateLogin(email, password) {
+            return {
+              email: !email
+                ? "Enter your email address."
+                : !/^\S+@[^\s@]+\.[^\s@]+$/.test(email) || email.split("@").length !== 2
+                  ? "Enter a valid email address."
+                  : "",
+              password: password ? "" : "Enter your password.",
+            };
+          }
+          function checkCredentials(users, email, password) {
+            return users.find(
+              (u) =>
+                u.email.toLowerCase() === email.toLowerCase() &&
+                u.passwordHash === "educational-placeholder:" + password
+            );
+          }
+          function partnerProfile(user) {
+            return {
+              provider: "Northstar Identity",
+              externalId: "northstar-" + user.userId,
+              displayName: user.displayName,
+              role: user.role,
+            };
+          }
+          class SessionManager {
+            constructor(store) {
+              this.store = store;
+            }
+            get user() {
+              const { session, users } = this.store.data;
+              return (
+                session?.status === "active" &&
+                users.find((u) => u.userId === session.userId && u.role === session.role)
+              );
+            }
+            start(user) {
+              const { session, prefs } = this.store.data;
+              const previous = session ? [session, ...prefs.recentSessions] : prefs.recentSessions;
+              return this.store.write({
+                prefs: { ...prefs, recentSessions: previous },
+                session: {
+                  sessionId: crypto.randomUUID(),
+                  userId: user.userId,
+                  role: user.role,
+                  createdAt: new Date().toISOString(),
+                  status: "active",
+                },
+              });
+            }
+            end() {
+              const { session, prefs } = this.store.data;
+              if (!this.user) return false;
+              return this.store.write({
+                session: { ...session, status: "ended" },
+                prefs: {
+                  ...prefs,
+                  recentSessions: prefs.recentSessions.map((s) =>
+                    s.userId === session.userId ? { ...s, status: "ended" } : s
+                  ),
+                },
+              });
+            }
+            revoke(id) {
+              const user = this.user;
+              const { session, prefs } = this.store.data;
+              const target = [session, ...prefs.recentSessions].find(
+                (s) => s?.sessionId === id && s.status === "active"
+              );
+              if (!user || !target || (target.userId !== user.userId && user.role !== "admin"))
+                return false;
+              if (target === session)
+                return this.store.write({ session: { ...session, status: "ended" } });
+              return this.store.write({
+                prefs: {
+                  ...prefs,
+                  recentSessions: prefs.recentSessions.map((s) =>
+                    s.sessionId === id ? { ...s, status: "ended" } : s
+                  ),
+                },
+              });
+            }
+          }
+
+          function accessReason(route, user) {
+            if (["home", "admin"].includes(route) && !user)
+              return "Your session has ended or you have not signed in.";
+            if (route === "admin" && user.role !== "admin")
+              return "This role does not have permission to open the admin dashboard.";
+            return "";
+          }
+
+          function decide(store, user, id, status) {
+            if (user?.role !== "admin" || !["approved", "denied"].includes(status)) return false;
+            const items = store.data.approvals;
+            if (!items.some((a) => a.requestId === id && a.status === "pending")) return false;
+            return store.write({
+              approvals: items.map((a) => (a.requestId === id ? { ...a, status } : a)),
+            });
+          }
+          function simulate(store, user) {
+            if (user?.role !== "admin") return false;
+            const sample = store.data.users.find((u) => u.role === "student");
+            return store.write({
+              approvals: [
+                {
+                  requestId: crypto.randomUUID(),
+                  userId: sample.userId,
+                  userEmail: sample.email,
+                  role: sample.role,
+                  status: "pending",
+                  createdAt: new Date().toISOString(),
+                },
+                ...store.data.approvals,
+              ],
+            });
+          }
+          function dashboard(data, ui) {
+            const { e, badge, btn, sessionDetails } = ui;
+            const approvals = filtered(data.approvals, ui.filters);
+            const pending = approvals.filter((a) => a.status === "pending");
+            function row(a) {
+              return `<li><div><strong>${e(a.userEmail)}</strong><small>${e(a.requestId)}</small> ${badge(a.role)}<small>${e(new Date(a.createdAt).toLocaleString())}</small></div><div class="actions">${badge(a.status)} ${a.status === "pending" ? btn("Approve", "approved", "", a.requestId) + btn("Deny", "denied", "", a.requestId) : ""}</div></li>`;
+            }
+            return `<h1>Admin dashboard</h1>${auditControls(ui.filters, e)}<div id="admin-results"><section class="card"><div class="heading"><h2>Login approvals</h2>${badge("pending", pending.length + " pending")}</div>${btn("Simulate New Login Request", "simulate", "primary")}<ul class="records">${pending.map(row).join("") || "<li>No pending approvals match this view. Clear filters or simulate a request.</li>"}</ul>${
+              approvals.length > pending.length
+                ? `<details><summary>Decision history (${approvals.length - pending.length})</summary><ul class="records">${approvals
+                    .filter((a) => a.status !== "pending")
+                    .map(row)
+                    .join("")}</ul></details>`
+                : ""
+            }</section><section class="card"><h2>Sample users &amp; roles</h2><table class="table"><thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead><tbody>${data.users.map((u) => `<tr><td>${e(u.displayName)}</td><td>${e(u.email)}</td><td>${badge(u.role)}</td></tr>`).join("")}</tbody></table></section><section class="card"><h2>Active and recent sessions</h2>${[data.session, ...data.prefs.recentSessions].filter(Boolean).map(sessionDetails).join("") || "No active or recent sessions."}${btn("Log out", "logout")}</section></div><section id="print-audit">${auditReport(approvals, e)}</section>`;
+          }
+          function filtered(rows, filters) {
+            const query = filters.query.trim().toLowerCase();
+            return rows.filter(
+              (a) =>
+                (a.userEmail.toLowerCase().includes(query) ||
+                  a.requestId.toLowerCase().includes(query)) &&
+                (!filters.status || filters.status === a.status) &&
+                (!filters.role || filters.role === a.role)
+            );
+          }
+          const auditColumns = ["requestId", "userId", "userEmail", "role", "status", "createdAt"];
+          function auditCsv(rows) {
+            function cell(value) {
+              const s = String(value);
+              return '"' + (/^[=+@\-\t\r]/.test(s) ? "'" : "") + s.replaceAll('"', '""') + '"';
+            }
+            return [auditColumns, ...rows.map((a) => auditColumns.map((k) => a[k]))]
+              .map((row) => row.map(cell).join(","))
+              .join("\r\n");
+          }
+          function downloadCsv(rows) {
+            const url = URL.createObjectURL(
+              new Blob([auditCsv(rows)], { type: "text/csv;charset=utf-8" })
+            );
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "authmatrix-audit.csv";
+            document.body.append(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+          }
+          function auditReport(rows, e) {
+            return (
+              "<h1>AuthMatrix approval audit</h1><p>" +
+              e(new Date().toLocaleString()) +
+              " · " +
+              rows.length +
+              ' matching requests</p><table class="table"><thead><tr>' +
+              auditColumns.map((k) => "<th>" + e(k) + "</th>").join("") +
+              "</tr></thead><tbody>" +
+              rows
+                .map(
+                  (a) =>
+                    "<tr>" + auditColumns.map((k) => "<td>" + e(a[k]) + "</td>").join("") + "</tr>"
+                )
+                .join("") +
+              "</tbody></table>"
+            );
+          }
+          function auditControls(filters, e) {
+            const select = (key, values) =>
+              `<label for="filter-${key}">${key === "role" ? "Role" : "Status"}</label><select class="form-select" id="filter-${key}"><option value="">All</option>${values.map((v) => `<option value="${v}" ${filters[key] === v ? "selected" : ""}>${v[0].toUpperCase() + v.slice(1)}</option>`).join("")}</select>`;
+            return `<section class="card"><h2>Find approval requests</h2><div class="filters"><div><label for="filter-query">Email or request ID</label><input class="form-control" id="filter-query" type="search" value="${e(filters.query)}"></div><div>${select("status", ["pending", "approved", "denied"])}</div><div>${select("role", ["student", "admin"])}</div></div><div class="actions"><button data-action="csv">Export CSV</button><button data-action="pdf">Export PDF</button></div></section>`;
+          }
+
+          // Decode the public Base32 sample key and encode the RFC time counter in network byte order.
+          function totpInputs(secret, timeMs, period = 30) {
+            const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+            let bits = 0,
+              buffer = 0;
+            const key = [];
+            for (const ch of secret.toUpperCase().replace(/=+$/, "")) {
+              const value = alphabet.indexOf(ch);
+              if (value < 0) throw Error("Invalid demo key.");
+              buffer = (buffer << 5) | value;
+              bits += 5;
+              if (bits >= 8) {
+                bits -= 8;
+                key.push((buffer >> bits) & 255);
+              }
+            }
+            const message = new Uint8Array(8);
+            let counter = Math.floor(timeMs / 1000 / period);
+            for (let i = 7; i >= 0; i--) {
+              message[i] = counter % 256;
+              counter = Math.floor(counter / 256);
+            }
+            return { key: Uint8Array.from(key), message };
+          }
+          function truncate(hash) {
+            const offset = hash[hash.length - 1] & 15;
+            const value =
+              ((hash[offset] & 127) << 24) |
+              (hash[offset + 1] << 16) |
+              (hash[offset + 2] << 8) |
+              hash[offset + 3];
+            return String(value % 1000000).padStart(6, "0");
+          }
+          async function generateTotp(record, timeMs = Date.now()) {
+            const { key, message } = totpInputs(record.secret, timeMs, record.periodSeconds);
+            const handle = await crypto.subtle.importKey(
+              "raw",
+              key,
+              { name: "HMAC", hash: "SHA-1" },
+              false,
+              ["sign"]
+            );
+            return truncate(new Uint8Array(await crypto.subtle.sign("HMAC", handle, message)));
+          }
+
+          const filters = { query: "", status: "", role: "" };
+          let challenge = null,
+            tick;
+          const store = new LocalDataStore();
+          const sessions = new SessionManager(store);
+          const $ = (selector) => document.querySelector(selector);
+          const view = $("#view");
+          const e = (value) =>
+            String(value).replace(
+              /[&<>"']/g,
+              (char) =>
+                ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]
+            );
+          const icons = {
+            admin: "shield-lock",
+            student: "mortarboard",
+            approved: "check-circle",
+            pending: "hourglass-split",
+            denied: "x-circle",
+            active: "check-circle",
+            ended: "stop-circle",
+          };
+          const badge = (status, label = status[0].toUpperCase() + status.slice(1)) =>
+            `<span class="badge ${e(status)}"><i aria-hidden="true" class="bi bi-${icons[status]}"></i>${e(label)}</span>`;
+          const btn = (label, action, style = "", id = "") =>
+            `<button class="${style}" data-action="${action}" data-id="${e(id)}">${label}</button>`;
+          function sessionDetails(s) {
+            return `<dl><dt>Session ID</dt><dd>${e(s.sessionId)}</dd><dt>User ID</dt><dd>${e(s.userId)}</dd><dt>Role</dt><dd>${badge(s.role)}</dd><dt>Created</dt><dd>${e(new Date(s.createdAt).toLocaleString())}</dd><dt>Status</dt><dd>${badge(s.status)}</dd></dl>${s.status === "active" ? btn("Revoke Session", "revoke", "", s.sessionId) : ""}`;
+          }
+          let timer,
+            partnerReady = false,
+            selectedRole = "student",
+            notice = null;
+          const announce = (message, bad = false) => {
+            notice = { message, bad };
+            paintFeedback();
+          };
+          function paintFeedback() {
+            const n = store.error
+              ? {
+                  bad: true,
+                  message:
+                    "Sample storage is blocked or damaged. Allow browser storage, then reset the sample data to recover.",
+                }
+              : notice;
+            $("#feedback").innerHTML = n
+              ? `<div class="alert ${n.bad ? "bad" : "good"}"><i aria-hidden="true" class="bi bi-${n.bad ? "exclamation-circle" : "check-circle"}"></i> ${e(n.message)} ${store.error ? btn("Reset Sample Data", "reset") : ""}</div>`
+              : "";
+          }
+          function go(route, message, bad = false) {
+            const hash = "#" + route;
+            if (location.hash !== hash) history.pushState(null, "", hash);
+            notice = message ? { message, bad } : null;
+            render();
+            $("#main").focus();
+          }
+          const route = () => location.hash.slice(1) || (sessions.user ? "home" : "signin");
+          function restricted(reason) {
+            return `<section class="card narrow"><h1>Access blocked</h1><p>${e(reason)}</p>${btn(sessions.user ? "Return to protected home" : "Return to sign-in", sessions.user ? "home" : "signin", "primary")}</section>`;
+          }
+          function partner() {
+            if (!partnerReady) {
+              timer = setTimeout(() => {
+                partnerReady = true;
+                render();
+              }, 650);
+              return '<section class="card narrow" role="status"><span class="spinner-border"></span> Connecting to the mock partner…</section>';
+            }
+            const u = store.data.users.find((u) => u.role === selectedRole);
+            const profile = partnerProfile(u);
+            return `<section class="card narrow"><div class="eyebrow">Mock partner redirect</div><h1>Northstar Identity</h1><p>Allow AuthMatrix to use this sample profile for single sign-on?</p><label for="role">Demo role</label><select id="role" class="form-select" aria-describedby="role-help">${["student", "admin"].map((r) => `<option value="${r}" ${r === selectedRole ? "selected" : ""}>${r === "admin" ? "Admin" : "Student"}</option>`).join("")}</select><small id="role-help">Choose the profile to share with AuthMatrix.</small><dl><dt>Provider</dt><dd>${e(profile.provider)}</dd><dt>External ID</dt><dd>${e(profile.externalId)}</dd><dt>Name</dt><dd>${e(profile.displayName)}</dd><dt>Role</dt><dd>${badge(profile.role)}</dd></dl><div class="actions">${btn("Approve &amp; Return to AuthMatrix", "consent", "primary")}${btn("Cancel / Deny", "cancel")}</div></section>`;
+          }
+          function help() {
+            return `<section class="card narrow"><h1>About / Help</h1><h2>Standard sign-in</h2><p>Fill a demo account, then sign in. The app compares the sample credentials and saves a session in this browser.</p><h2>Role-based access control</h2><p>Both roles can open protected home. The admin role can also review simulated login requests. Try Test Admin Action with each account.</p><h2>Partner sign-in</h2><p>A partner typically authenticates you before returning to the relying application. OAuth 2.0 delegates access and OpenID Connect adds identity. Here you select a synthetic profile and grant or deny consent locally.</p><h2>Time-based one-time passwords</h2><p>RFC 6238 combines a shared secret with a time counter to generate a short-lived code. A verifier checks the code using the same secret and time window. Open the mobile Authenticator and select the matching account. Enter the six digits before the countdown resets. Simulated push decisions stay on each device.</p><h2>Educational prototype</h2><p>Anyone using this browser can change localStorage, including roles and sessions. All identities, credentials, consent and approval decisions are synthetic. Production identity systems require server-side verification, secure sessions, and validated protocol responses. Never enter real credentials here.</p></section>`;
+          }
+          function render() {
+            clearTimeout(timer);
+            clearInterval(tick);
+            if (route() !== "verify") challenge = null;
+            paintFeedback();
+            const user = sessions.user,
+              r = route();
+            if (r !== "partner") {
+              partnerReady = false;
+              selectedRole = "student";
+            }
+            const nav = user
+              ? [
+                  ["home", "Protected home"],
+                  ...(user.role === "admin" ? [["admin", "Admin dashboard"]] : []),
+                  ["help", "About / Help"],
+                ]
+              : [
+                  ["signin", "Sign in"],
+                  ["help", "About / Help"],
+                ];
+            $("#links").innerHTML = nav
+              .map(
+                ([key, name]) =>
+                  `<a href="#${key}" ${key === r ? 'aria-current="page"' : ""}>${name}</a>`
+              )
+              .join("");
+            $(".brand").href = user ? "#home" : "#signin";
+            if (store.error) {
+              view.innerHTML = "<h1>Workspace unavailable</h1>";
+              return;
+            }
+            const reason = accessReason(r, user);
+            if (reason) {
+              view.innerHTML = restricted(reason);
+              return;
+            }
+            switch (r) {
+              case "signin":
+                view.replaceChildren($("#loginView").content.cloneNode(true));
+                break;
+              case "partner":
+                view.innerHTML = partner();
+                break;
+              case "verify":
+                if (!challenge) {
+                  view.innerHTML = restricted("Start a new sign-in to verify a second factor.");
+                  break;
+                }
+                view.innerHTML = `<dialog id="verify-dialog" class="modal-content" aria-labelledby="verify-title"><h2 id="verify-title">Awaiting mobile approval</h2><p>Open Authenticator and select ${e(challenge.email)}. Enter its code or simulate a push approval.</p><form id="verify-form" novalidate><label for="otp">Six-digit TOTP code</label><input id="otp" class="form-control" inputmode="numeric" autocomplete="one-time-code" aria-describedby="otp-error"><small id="otp-error" class="error" aria-live="polite"></small><p id="clock" aria-live="polite"></p><button class="primary">Verify code</button></form><hr><div class="actions">${btn("Simulate Mobile Push Approval", "push")}${btn("Cancel", "cancel-factor")}</div></dialog>`;
+                $("#verify-dialog").showModal();
+                $("#verify-dialog").addEventListener("cancel", (event) => {
+                  event.preventDefault();
+                  go("signin", "Verification canceled.", true);
+                });
+                const clock = () => {
+                  $("#clock").textContent =
+                    "Code refreshes in " +
+                    (30 - (Math.floor(Date.now() / 1000) % 30)) +
+                    " seconds.";
+                };
+                clock();
+                tick = setInterval(clock, 1000);
+                break;
+              case "home":
+                view.innerHTML = `<section class="card narrow">${badge(user.role)}<h1>Welcome, ${e(user.displayName)}.</h1><p>You are on your protected home page.</p><h2>Your active sessions</h2>${[
+                  store.data.session,
+                  ...store.data.prefs.recentSessions,
+                ]
+                  .filter((s) => s?.userId === user.userId && s.status === "active")
+                  .map(sessionDetails)
+                  .join(
+                    ""
+                  )}<div class="actions">${btn("Test Admin Action", "admin", "primary")}${btn("Start another sign-in", "signin")}${btn("Log out", "logout")}</div></section>`;
+                break;
+              case "admin":
+                view.innerHTML = dashboard(store.data, { e, badge, btn, sessionDetails, filters });
+                break;
+              case "ended":
+                view.innerHTML = restricted("Your session has ended.");
+                if (!user)
+                  view.insertAdjacentHTML(
+                    "beforeend",
+                    '<p class="narrow">No active session selected. Sign in to start a new one.</p>'
+                  );
+                break;
+              case "help":
+                view.innerHTML = help();
+                break;
+              default:
+                view.innerHTML = restricted("This page could not be found.");
+            }
+          }
+          function start(u) {
+            challenge = u;
+            go("verify");
+          }
+          function finish(u) {
+            if (!challenge || u !== challenge || store.error) return;
+            if (sessions.start(u)) go("home", "Signed in. You are on your protected home page.");
+            else render();
+          }
+          function validate(form) {
+            const errors = validateLogin(
+              form.elements.email.value.trim(),
+              form.elements.password.value
+            );
+            for (const [id, message] of Object.entries(errors)) {
+              form.elements[id].setAttribute("aria-invalid", String(Boolean(message)));
+              $("#" + id + "-error").textContent = message;
+            }
+            return Object.keys(errors).find((id) => errors[id]);
+          }
+          await store.init();
+
+          document.addEventListener("submit", async (event) => {
+            if (event.target.id === "verify-form") {
+              event.preventDefault();
+              const pending = challenge;
+              if (!pending) return;
+              const input = $("#otp"),
+                err = $("#otp-error"),
+                code = input.value.replace(/ /g, "");
+              try {
+                const record = store.seed.totpSecrets.find((s) => s.userId === pending.userId);
+                if (/^\d{6}$/.test(code) && code === (await generateTotp(record))) {
+                  finish(pending);
+                  return;
+                }
+                err.textContent = "Enter the current six-digit code for this account.";
+              } catch {
+                err.textContent =
+                  "Code verification is unavailable. Use localhost or HTTPS, or simulate push approval.";
+              }
+              input.setAttribute("aria-invalid", "true");
+              input.focus();
+              return;
+            }
+            if (event.target.id !== "login") return;
+            event.preventDefault();
+            const form = event.target;
+            const invalid = validate(form);
+            if (invalid) {
+              announce("Check the highlighted fields.", true);
+              form.elements[invalid].focus();
+              return;
+            }
+            const u = checkCredentials(
+              store.data.users,
+              form.elements.email.value.trim(),
+              form.elements.password.value
+            );
+            if (u) start(u);
+            else announce("Invalid email or password. Check your details and try again.", true);
+          });
+          function updateFilters(event) {
+            const control = event.target;
+            if (!control.id?.startsWith("filter-") || sessions.user?.role !== "admin") return;
+            filters[control.id.slice(7)] = control.value;
+            const next = document.createElement("div");
+            next.innerHTML = dashboard(store.data, { e, badge, btn, sessionDetails, filters });
+            for (const id of ["admin-results", "print-audit"])
+              $("#" + id).replaceWith(next.querySelector("#" + id));
+          }
+          document.addEventListener("input", (event) => {
+            if (event.target.id === "filter-query") updateFilters(event);
+            if (event.target.form?.id === "login" && event.target.hasAttribute("aria-invalid"))
+              validate(event.target.form);
+          });
+          document.addEventListener("change", (event) => {
+            if (["filter-status", "filter-role"].includes(event.target.id)) updateFilters(event);
+            if (event.target.id === "role") {
+              selectedRole = event.target.value;
+              render();
+              $("#role").focus();
+            }
+          });
+          document.addEventListener("click", (event) => {
+            if (event.target.closest(".skip")) {
+              event.preventDefault();
+              $("#main").focus();
+              return;
+            }
+            const target = event.target.closest("[data-action]");
+            if (!target) return;
+            const action = target.dataset.action;
+            if (action === "reset") {
+              $("#resetDialog").showModal();
+              return;
+            }
+            if (action === "close") {
+              $("#resetDialog").close();
+              return;
+            }
+            if (action === "confirm-reset") {
+              $("#resetDialog").close();
+              Object.assign(filters, { query: "", role: "", status: "" });
+              store.reset();
+              go("signin", "Sample data restored.");
+              return;
+            }
+            if (store.error) return;
+            switch (action) {
+              case "push":
+                if (challenge && route() === "verify") finish(challenge);
+                break;
+              case "cancel-factor":
+                go("signin", "Verification canceled.", true);
+                break;
+              case "csv":
+              case "pdf":
+                store.load();
+                if (store.error || sessions.user?.role !== "admin" || route() !== "admin") {
+                  render();
+                  break;
+                }
+                if (action === "csv") downloadCsv(filtered(store.data.approvals, filters));
+                else {
+                  render();
+                  window.print();
+                }
+                break;
+              case "revoke": {
+                store.load();
+                const current = store.data.session?.sessionId === target.dataset.id;
+                if (!store.error && sessions.revoke(target.dataset.id)) {
+                  if (current) go("ended", "Session revoked.");
+                  else {
+                    announce("Session revoked.");
+                    render();
+                  }
+                } else render();
+                break;
+              }
+
+              case "student":
+              case "admin-fill": {
+                const role = action === "student" ? "student" : "admin";
+                const u = store.data.users.find((u) => u.role === role);
+                $("#email").value = u.email;
+                $("#password").value = u.passwordHash.slice("educational-placeholder:".length);
+                validate($("#login"));
+                announce("Demo account filled. Select Sign in to continue.");
+                break;
+              }
+              case "partner":
+              case "signin":
+              case "home":
+              case "admin":
+                go(action);
+                break;
+              case "consent":
+                if (route() === "partner" && partnerReady) {
+                  const u = store.data.users.find((u) => u.role === selectedRole);
+                  start(u);
+                }
+                break;
+              case "cancel":
+                go("signin", "Approval denied. Partner sign-in was canceled.", true);
+                break;
+              case "logout":
+                if (sessions.user && sessions.end()) go("ended", "Signed out.");
+                else render();
+                break;
+              case "simulate":
+              case "approved":
+              case "denied": {
+                store.load();
+                if (store.error || accessReason("admin", sessions.user)) {
+                  render();
+                  break;
+                }
+                const ok =
+                  action === "simulate"
+                    ? simulate(store, sessions.user)
+                    : decide(store, sessions.user, target.dataset.id, action);
+                announce(
+                  ok
+                    ? action === "simulate"
+                      ? "New login request pending approval."
+                      : "Login approval " + action + "."
+                    : "The request could not be updated.",
+                  !ok || action === "denied"
+                );
+                render();
+                break;
+              }
+            }
+          });
+          window.addEventListener("hashchange", () => {
+            notice = null;
+            render();
+            $("#main").focus();
+          });
+          window.addEventListener("storage", (event) => {
+            if (!event.key || event.key.startsWith("authmatrix_")) {
+              challenge = null;
+              store.load();
+              notice = null;
+              render();
+            }
+          });
+          render();
+        })();
+      }
+    </script>
+  </body>
+</html>

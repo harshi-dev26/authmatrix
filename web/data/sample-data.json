@@ -1,0 +1,42 @@
+{
+  "users": [
+    {
+      "userId": "stu-001",
+      "email": "maya@example.test",
+      "displayName": "Maya Rao",
+      "role": "student",
+      "passwordHash": "educational-placeholder:StudentDemo1",
+      "createdAt": "2026-01-01T09:00:00Z"
+    },
+    {
+      "userId": "adm-001",
+      "email": "alex@example.test",
+      "displayName": "Alex Chen",
+      "role": "admin",
+      "passwordHash": "educational-placeholder:AdminDemo1",
+      "createdAt": "2026-01-01T09:00:00Z"
+    }
+  ],
+  "approvals": [
+    {
+      "requestId": "req-001",
+      "userId": "stu-001",
+      "userEmail": "maya@example.test",
+      "role": "student",
+      "status": "pending",
+      "createdAt": "2026-01-02T10:00:00Z"
+    }
+  ],
+  "totpSecrets": [
+    {
+      "userId": "stu-001",
+      "secret": "IF2XI2CNMF2HE2LYFVSGK3LPFVZXI5LEMVXHI",
+      "periodSeconds": 30
+    },
+    {
+      "userId": "adm-001",
+      "secret": "IF2XI2CNMF2HE2LYFVSGK3LPFVQWI3LJNY",
+      "periodSeconds": 30
+    }
+  ]
+}
