@@ -24,18 +24,17 @@ export function simulate(store, user) {
 export function dashboard(data, ui) {
   const { e, badge, btn, sessionDetails } = ui;
   const approvals = filtered(data.approvals, ui.filters);
-  const pending = approvals.filter((a) => a.status === "pending");
+  const status = ui.filters.status;
+  const title = status ? status[0].toUpperCase() + status.slice(1) + " requests" : "All requests";
+  const count = status
+    ? badge(status, approvals.length + " " + status)
+    : approvals.length +
+      " total · " +
+      badge("pending", approvals.filter((a) => a.status === "pending").length + " pending");
   function row(a) {
-    return `<li><div><strong>${e(a.userEmail)}</strong><small>${e(a.requestId)}</small> ${badge(a.role)}<small>${e(new Date(a.createdAt).toLocaleString())}</small></div><div class="actions">${badge(a.status)} ${a.status === "pending" ? btn("Approve", "approved", "", a.requestId) + btn("Deny", "denied", "", a.requestId) : ""}</div></li>`;
+    return `<li><div><strong>${e(data.users.find((u) => u.userId === a.userId)?.displayName || a.userEmail)}</strong><small>${e(a.userEmail)}</small><small>${e(a.requestId)}</small> ${badge(a.role)}<small>${e(new Date(a.createdAt).toLocaleString())}</small></div><div class="actions">${badge(a.status)} ${a.status === "pending" ? btn("Approve", "approved", "", a.requestId) + btn("Deny", "denied", "", a.requestId) : ""}</div></li>`;
   }
-  return `<h1>Admin dashboard</h1>${auditControls(ui.filters, e)}<div id="admin-results"><section class="card"><div class="heading"><h2>Login approvals</h2>${badge("pending", pending.length + " pending")}</div>${btn("Simulate New Login Request", "simulate", "primary")}<ul class="records">${pending.map(row).join("") || "<li>No pending approvals match this view. Clear filters or simulate a request.</li>"}</ul>${
-    approvals.length > pending.length
-      ? `<details><summary>Decision history (${approvals.length - pending.length})</summary><ul class="records">${approvals
-          .filter((a) => a.status !== "pending")
-          .map(row)
-          .join("")}</ul></details>`
-      : ""
-  }</section><section class="card"><h2>Sample users &amp; roles</h2><table class="table"><thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead><tbody>${data.users.map((u) => `<tr><td>${e(u.displayName)}</td><td>${e(u.email)}</td><td>${badge(u.role)}</td></tr>`).join("")}</tbody></table></section><section class="card"><h2>Active and recent sessions</h2>${[data.session, ...data.prefs.recentSessions].filter(Boolean).map(sessionDetails).join("") || "No active or recent sessions."}${btn("Log out", "logout")}</section></div><section id="print-audit">${auditReport(approvals, e)}</section>`;
+  return `<h1>Admin dashboard</h1>${auditControls(ui.filters, e)}<div id="admin-results"><section class="card"><div class="heading"><h2>${title}</h2><span aria-live="polite">${count}</span></div>${btn("Simulate New Login Request", "simulate", "primary")}<ul class="records">${approvals.map(row).join("") || `<li>No ${status ? status + " " : ""}requests match your filters.</li>`}</ul></section><section class="card"><h2>Sample users &amp; roles</h2><table class="table"><thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead><tbody>${data.users.map((u) => `<tr><td>${e(u.displayName)}</td><td>${e(u.email)}</td><td>${badge(u.role)}</td></tr>`).join("")}</tbody></table></section><section class="card"><h2>Active and recent sessions</h2>${[data.session, ...data.prefs.recentSessions].filter(Boolean).map(sessionDetails).join("") || "No active or recent sessions."}${btn("Log out", "logout")}</section></div><section id="print-audit">${auditReport(approvals, e)}</section>`;
 }
 export function filtered(rows, filters) {
   const query = filters.query.trim().toLowerCase();

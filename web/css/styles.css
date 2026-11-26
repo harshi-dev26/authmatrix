@@ -560,3 +560,6 @@ main:focus {
     break-inside: avoid;
   }
 }
+[hidden] {
+  display: none !important;
+}

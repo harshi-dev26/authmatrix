@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AuthMatrix · Project Lab</title>
+    <link href="css/styles.css" rel="stylesheet" />
+  </head>
+  <body>
+    <header>
+      <nav class="navbar shell">
+        <a class="brand" href="./live.html"><span class="mark">A</span> AuthMatrix</a
+        ><a href="./index.html#signin">Educational prototype</a>
+      </nav>
+    </header>
+    <main class="shell">
+      <div id="notice" aria-live="polite"></div>
+      <section id="login-card" class="card narrow">
+        <h1>Project Lab access</h1>
+        <p>Sign in with your assigned account to request access or review student requests.</p>
+        <form id="login">
+          <label for="email">Email</label
+          ><input
+            class="form-control"
+            id="email"
+            type="email"
+            required
+            autocomplete="username"
+          /><label for="password">Access pass</label
+          ><input
+            class="form-control"
+            id="password"
+            type="password"
+            required
+            autocomplete="current-password"
+          /><button class="primary">Sign in</button>
+        </form>
+      </section>
+      <section hidden id="workspace">
+        <div class="heading">
+          <h1>Project Lab</h1>
+          <button id="logout">Sign out</button>
+        </div>
+        <p id="identity"></p>
+        <section class="card" id="student">
+          <form id="submit">
+            <label for="reason">Why do you need access?</label
+            ><textarea class="form-control" id="reason" required maxlength="500"></textarea
+            ><button class="primary">Send request</button>
+          </form>
+          <p><button id="lab">Open Project Lab</button></p>
+          <div id="resource" aria-live="polite"></div>
+        </section>
+        <details class="card">
+          <summary>Check my authenticator code</summary>
+          <form id="check">
+            <label for="otp-live">Six-digit mobile code</label
+            ><input id="otp-live" class="form-control" inputmode="numeric" required /><button>
+              Verify code
+            </button>
+          </form>
+        </details>
+        <section class="card">
+          <h2>Access requests</h2>
+          <label for="filter">Status</label
+          ><select id="filter" class="form-select">
+            <option value="">All</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="denied">Denied</option>
+          </select>
+          <ul class="records" id="requests" aria-live="polite"></ul>
+        </section>
+      </section>
+    </main>
+    <script type="module" src="js/live.js"></script>
+  </body>
+</html>

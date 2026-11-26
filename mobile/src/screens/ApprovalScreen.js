@@ -1,68 +1,78 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
-import payload from "../data/payload.json";
 import ApprovalPrompt from "../components/ApprovalPrompt";
-import { Button, Badge, styles } from "../components/ui";
-function prompt(profile, details, id) {
-  return {
-    ...details,
-    ...profile,
-    requestId: id,
-    createdAt: new Date().toISOString(),
-    status: "pending",
-  };
-}
-export default function ApprovalScreen() {
-  const [items, setItems] = useState(() =>
-    payload.prompts.map((p) =>
-      prompt(
-        payload.profiles.find((u) => u.userId === p.userId),
-        p,
-        p.requestId
-      )
-    )
-  );
-  function simulate() {
-    setItems((prev) => [
-      prompt(
-        payload.profiles[prev.length % payload.profiles.length],
-        payload.prompts[0],
-        "mobile-" + (prev.length + 1)
-      ),
-      ...prev,
-    ]);
+import { Badge, styles, Button } from "../components/ui";
+import { access } from "../utils/live";
+export default function ApprovalScreen({ token }) {
+  const [items, setItems] = useState([]),
+    [message, say] = useState("Loading requests…"),
+    [filter, setFilter] = useState("all");
+  useEffect(() => {
+    let active = true,
+      busy = false;
+    async function refresh() {
+      if (busy) return;
+      busy = true;
+      try {
+        const result = await access("list", {}, token);
+        if (active) {
+          setItems(result.requests);
+          say("");
+        }
+      } catch (e) {
+        if (active) say(e.message);
+      } finally {
+        busy = false;
+      }
+    }
+    refresh();
+    const timer = setInterval(refresh, 4000);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, [token]);
+  async function decide(requestId, status) {
+    try {
+      const item = items.find((r) => r.requestId === requestId);
+      await access("decide", { requestId, userId: item.userId, status }, token);
+      setItems((await access("list", {}, token)).requests);
+      say("Request " + status + ".");
+    } catch (e) {
+      say(e.message);
+    }
   }
-  function decide(id, status) {
-    setItems((prev) =>
-      prev.map((p) => (p.requestId === id && p.status === "pending" ? { ...p, status } : p))
-    );
-  }
-  const pending = items.filter((p) => p.status === "pending"),
-    history = items.filter((p) => p.status !== "pending");
+  const shown = items.filter((r) => filter === "all" || r.status === filter);
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <Text accessibilityRole="header" style={styles.title}>
-        Approvals
+        Access requests
       </Text>
-      {pending.map((p) => (
-        <ApprovalPrompt key={p.requestId} item={p} onDecision={decide} />
-      ))}
-      {!pending.length && <Text style={styles.body}>No pending requests.</Text>}
-      <Button label="Simulate Incoming Prompt" onPress={simulate} />
-      <Text accessibilityRole="header" style={styles.heading}>
-        Decision history
-      </Text>
-      <View accessibilityLiveRegion="polite" style={styles.card}>
-        {history.map((p) => (
-          <View key={p.requestId}>
-            <Text style={styles.body}>
-              {p.email} · {p.requestId}
-            </Text>
-            <Badge kind={p.status} />
-          </View>
+      <View style={styles.row}>
+        {["all", "pending", "approved", "denied"].map((s) => (
+          <Button
+            key={s}
+            label={s}
+            selected={s === filter}
+            primary={s === filter}
+            onPress={() => setFilter(s)}
+          />
         ))}
-        {!history.length && <Text>No decisions yet.</Text>}
       </View>
+      <Text accessibilityLiveRegion="polite">{message}</Text>
+      {!shown.length && !message && <Text>No matching requests.</Text>}
+      {shown.map((r) =>
+        r.status === "pending" ? (
+          <ApprovalPrompt key={r.requestId} item={r} onDecision={decide} />
+        ) : (
+          <View style={styles.card} key={r.requestId}>
+            <Text style={styles.heading}>{r.userEmail}</Text>
+            <Text>{r.reason}</Text>
+            <Text selectable>{r.requestId}</Text>
+            <Badge kind={r.status} />
+          </View>
+        )
+      )}
     </ScrollView>
   );
 }
