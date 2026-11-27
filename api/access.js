@@ -1,4 +1,11 @@
-import { createHmac, timingSafeEqual, verify, randomUUID, randomBytes } from "node:crypto";
+import {
+  createHash,
+  createHmac,
+  timingSafeEqual,
+  verify,
+  randomUUID,
+  randomBytes,
+} from "node:crypto";
 
 import { get, put } from "@vercel/blob";
 import accounts, { issuer } from "../server/accounts.js";
@@ -116,17 +123,18 @@ export default async function handler(req, res) {
         .toLowerCase();
       const user = config.accounts.find((u) => u.email === email);
       const pass = String(body.password || "").trim();
-      if (
-        !user ||
-        pass.length !== 86 ||
-        !verify(
+      const assignedPassword =
+        user && equal(createHash("sha256").update(pass).digest("hex"), user.passwordHash);
+      const signedPass =
+        user &&
+        pass.length === 86 &&
+        verify(
           null,
           Buffer.from("authmatrix-live/v1/" + email),
           issuer,
           Buffer.from(pass, "base64url")
-        )
-      )
-        fail(401, "Invalid email or access pass.");
+        );
+      if (!assignedPassword && !signedPass) fail(401, "Invalid email or password.");
       return res.json({ user: profile(user), token: issue(user, config.key) });
     }
     const user = authenticate(req, config);
