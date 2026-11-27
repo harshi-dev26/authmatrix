@@ -55,6 +55,33 @@
           </fieldset>
         </section>
       </div>
+      <section hidden id="verify-card" class="card narrow">
+        <div class="eyebrow"><i class="bi bi-phone"></i> Second-factor verification</div>
+        <h1>Enter your mobile code</h1>
+        <p>
+          Open the AuthMatrix mobile app, choose the matching account in
+          <strong>Authenticator</strong>, and enter its current six-digit code.
+        </p>
+        <p id="verify-identity" class="badge"></p>
+        <form id="verify-form" novalidate>
+          <label for="verify-code">Six-digit TOTP code</label>
+          <input
+            class="form-control"
+            id="verify-code"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            maxlength="7"
+            required
+            placeholder="000 000"
+          />
+          <p id="verify-countdown" aria-live="polite"></p>
+          <button class="primary wide" type="submit">Verify and continue</button>
+        </form>
+        <div class="actions">
+          <button id="simulate-approval" type="button">Simulate Mobile Push Approval</button>
+          <button id="cancel-verification" type="button">Cancel</button>
+        </div>
+      </section>
       <section hidden id="workspace">
         <div class="heading workspace-heading">
           <div><div class="eyebrow">Connected identity workspace</div><h1 id="workspace-title">Project Lab</h1><p id="identity"></p></div>
@@ -84,14 +111,6 @@
           </div>
           <ul class="records live-records" id="requests" aria-live="polite"></ul>
         </section>
-        <details class="card">
-          <summary>Check my mobile authenticator code</summary>
-          <form id="check" class="inline-form">
-            <label for="otp-live">Six-digit mobile code</label>
-            <input id="otp-live" class="form-control" inputmode="numeric" required maxlength="7" />
-            <button>Verify code</button>
-          </form>
-        </details>
       </section>
     </main>
     <footer><div class="container shell"><span>AuthMatrix <span class="dot">/</span> Connected classroom prototype</span></div></footer>
