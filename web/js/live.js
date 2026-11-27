@@ -24,7 +24,9 @@ async function api(action, fields = {}) {
   return body;
 }
 function feedback(message) {
-  $("#notice").textContent = message;
+  $("#notice").innerHTML = message
+    ? `<div class="alert good"><i class="bi bi-info-circle" aria-hidden="true"></i> ${message}</div>`
+    : "";
 }
 function element(tag, text) {
   const node = document.createElement(tag);
@@ -92,6 +94,17 @@ function show() {
   $("#workspace").hidden = !session;
   $("#student").hidden = session?.user.role !== "student";
   $("#identity").textContent = session ? session.user.email + " · " + session.user.role : "";
+  $("#signin-link").textContent = session ? "Workspace" : "Sign in";
+  if (session) {
+    $("#workspace-title").textContent =
+      session.user.role === "admin" ? "Admin dashboard" : "Protected home";
+    $("#request-title").textContent =
+      session.user.role === "admin" ? "Student access requests" : "My access requests";
+    $("#request-help").textContent =
+      session.user.role === "admin"
+        ? "Approve or deny requests sent by students. Status filters update this list."
+        : "Your administrator’s decision appears here automatically.";
+  }
   rows = [];
   list();
   if (session) act(refresh);
@@ -130,6 +143,16 @@ $("#lab").onclick = () =>
   });
 $("#filter").onchange = list;
 $("#logout").onclick = signout;
+$("#student-fill").onclick = () => {
+  $("#email").value = "student@authmatrix.test";
+  $("#password").focus();
+  feedback("Student email filled. Enter the assigned password.");
+};
+$("#admin-fill").onclick = () => {
+  $("#email").value = "admin@authmatrix.test";
+  $("#password").focus();
+  feedback("Admin email filled. Enter the assigned password.");
+};
 show();
 setInterval(() => {
   if (!document.hidden && session) act(refresh);
