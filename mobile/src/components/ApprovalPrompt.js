@@ -17,15 +17,16 @@ export default function ApprovalPrompt({ item, onDecision }) {
     <View style={styles.card} {...gesture.panHandlers}>
       <Badge kind="pending" />
       <Text accessibilityRole="header" style={styles.heading}>
-        Allow Project Lab access?
+        Approve this sign-in request?
       </Text>
-      <Text style={styles.body}>{item.reason}</Text>
+      <Text style={styles.body}>It was started on the web just now. This prompt is simulated.</Text>
       <Text selectable style={styles.body}>
-        {item.userEmail}
+        {item.email}
       </Text>
       <Badge kind={item.role} />
       <Text style={styles.body}>
-        {item.requestId}
+        {item.provider} · {item.device}
+        {"\n"}Requested app: {item.tokenPayload.aud}
         {"\n"}
         {new Date(item.createdAt).toLocaleString()}
       </Text>
