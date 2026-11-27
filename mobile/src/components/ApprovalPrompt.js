@@ -19,14 +19,15 @@ export default function ApprovalPrompt({ item, onDecision }) {
       <Text accessibilityRole="header" style={styles.heading}>
         Approve this sign-in request?
       </Text>
-      <Text style={styles.body}>It was started on the web just now. This prompt is simulated.</Text>
+      <Text style={styles.body}>It was sent by the student from AuthMatrix Web.</Text>
+      <Text style={styles.body}>{item.reason}</Text>
       <Text selectable style={styles.body}>
-        {item.email}
+        {item.userEmail}
       </Text>
       <Badge kind={item.role} />
       <Text style={styles.body}>
-        {item.provider} · {item.device}
-        {"\n"}Requested app: {item.tokenPayload.aud}
+        Requested app: Project Lab
+        {"\n"}Request ID: {item.requestId}
         {"\n"}
         {new Date(item.createdAt).toLocaleString()}
       </Text>

@@ -1,0 +1,4 @@
+{
+  "framework": null,
+  "redirects": [{ "source": "/", "destination": "/web/live.html", "permanent": false }]
+}

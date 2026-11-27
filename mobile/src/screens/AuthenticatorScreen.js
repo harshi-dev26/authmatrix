@@ -1,24 +1,27 @@
 import React, { useEffect, useState } from "react";
-import { Modal, ScrollView, Text } from "react-native";
-import { View } from "react-native";
+import { Modal, ScrollView, Text, View } from "react-native";
 import payload from "../data/payload.json";
 import { readSecret } from "../utils/secureStorage";
 import TotpDisplay from "../components/TotpDisplay";
 import { Badge, Button, styles } from "../components/ui";
+
 export default function AuthenticatorScreen() {
-  const [index, select] = useState(0),
-    [source, setSource] = useState(null),
-    [info, setInfo] = useState(false);
+  const [index, select] = useState(0);
+  const [source, setSource] = useState(null);
+  const [info, setInfo] = useState(false);
   const user = payload.profiles[index];
+
   useEffect(() => {
     let mounted = true;
-    readSecret(payload.totpSecrets.find((s) => s.userId === user.userId)).then((next) => {
+    setSource(null);
+    readSecret(payload.totpSecrets.find((secret) => secret.userId === user.userId)).then((next) => {
       if (mounted) setSource(next);
     });
     return () => {
       mounted = false;
     };
   }, [user]);
+
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <Text accessibilityRole="header" style={styles.title}>
@@ -27,13 +30,13 @@ export default function AuthenticatorScreen() {
       <View style={styles.card}>
         <Text style={styles.heading}>Demo account</Text>
         <View style={styles.row}>
-          {payload.profiles.map((p, i) => (
+          {payload.profiles.map((profile, profileIndex) => (
             <Button
-              key={p.userId}
-              selected={i === index}
-              primary={i === index}
-              label={p.displayName}
-              onPress={() => select(i)}
+              key={profile.userId}
+              selected={profileIndex === index}
+              primary={profileIndex === index}
+              label={profile.displayName}
+              onPress={() => select(profileIndex)}
             />
           ))}
         </View>

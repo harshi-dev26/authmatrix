@@ -4,8 +4,10 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import ApprovalScreen from "./src/screens/ApprovalScreen";
 import AuthenticatorScreen from "./src/screens/AuthenticatorScreen";
 import { Button, styles, colors } from "./src/components/ui";
+
 export default function App() {
   const [tab, setTab] = useState("Approvals");
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.page}>
