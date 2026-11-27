@@ -1,18 +1,19 @@
 const $ = (s) => document.querySelector(s);
 const marks = { pending: "◷ Pending", approved: "✓ Approved", denied: "× Denied" };
 let session = null,
+  pendingSession = null,
   rows = [],
   version = 0,
   readId = 0;
 try {
-  session = JSON.parse(sessionStorage.getItem("am-live"));
+  session = JSON.parse(sessionStorage.getItem("am-live-v2fa"));
 } catch {}
-async function api(action, fields = {}) {
+async function api(action, fields = {}, token = session?.token) {
   const r = await fetch("/api/access", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(session ? { Authorization: "Bearer " + session.token } : {}),
+      ...(token ? { Authorization: "Bearer " + token } : {}),
     },
     body: JSON.stringify({ action, ...fields }),
   });
@@ -90,11 +91,15 @@ async function act(fn) {
 }
 function show() {
   version++;
-  $("#login-card").hidden = !!session;
+  $("#login-card").hidden = !!session || !!pendingSession;
+  $("#verify-card").hidden = !pendingSession || !!session;
   $("#workspace").hidden = !session;
   $("#student").hidden = session?.user.role !== "student";
   $("#identity").textContent = session ? session.user.email + " · " + session.user.role : "";
-  $("#signin-link").textContent = session ? "Workspace" : "Sign in";
+  $("#signin-link").textContent = session ? "Workspace" : pendingSession ? "Verify" : "Sign in";
+  $("#verify-identity").textContent = pendingSession
+    ? pendingSession.user.email + " · " + pendingSession.user.role
+    : "";
   if (session) {
     $("#workspace-title").textContent =
       session.user.role === "admin" ? "Admin dashboard" : "Protected home";
@@ -111,7 +116,8 @@ function show() {
 }
 function signout() {
   session = null;
-  sessionStorage.removeItem("am-live");
+  pendingSession = null;
+  sessionStorage.removeItem("am-live-v2fa");
   $("#resource").textContent = "";
   show();
   feedback("Signed out.");
@@ -119,13 +125,47 @@ function signout() {
 $("#login").onsubmit = (e) => {
   e.preventDefault();
   act(async () => {
-    session = await api("login", { email: $("#email").value, password: $("#password").value });
-    sessionStorage.setItem("am-live", JSON.stringify(session));
+    pendingSession = await api("login", {
+      email: $("#email").value,
+      password: $("#password").value,
+    });
     $("#password").value = "";
-    feedback("");
+    feedback("Password accepted. Complete mobile verification.");
     show();
   });
 };
+function finishVerification(message) {
+  session = pendingSession;
+  pendingSession = null;
+  sessionStorage.setItem("am-live-v2fa", JSON.stringify(session));
+  $("#verify-code").value = "";
+  show();
+  feedback(message);
+}
+$("#verify-form").onsubmit = (e) => {
+  e.preventDefault();
+  act(async () => {
+    const code = $("#verify-code").value.replace(/\s/g, "");
+    if (!/^\d{6}$/.test(code)) throw Error("Enter the current six-digit mobile code.");
+    const result = await api("verify", { code }, pendingSession?.token);
+    if (!result.valid) throw Error("Invalid or expired code. Enter the newest mobile code.");
+    finishVerification("Code verified. Welcome to your protected workspace.");
+  });
+};
+$("#simulate-approval").onclick = () =>
+  finishVerification("Mobile push approval simulated. Welcome to your protected workspace.");
+$("#cancel-verification").onclick = () => {
+  pendingSession = null;
+  $("#verify-code").value = "";
+  show();
+  feedback("Verification canceled.");
+};
+setInterval(() => {
+  const countdown = $("#verify-countdown");
+  if (countdown && pendingSession)
+    countdown.textContent =
+      "The mobile code refreshes in " + (30 - (Math.floor(Date.now() / 1000) % 30)) + " seconds.";
+}, 1000);
 $("#submit").onsubmit = (e) => {
   e.preventDefault();
   act(async () => {
@@ -157,12 +197,3 @@ show();
 setInterval(() => {
   if (!document.hidden && session) act(refresh);
 }, 4000);
-
-$("#check").onsubmit = (e) => {
-  e.preventDefault();
-  act(async () => {
-    const result = await api("verify", { code: $("#otp-live").value });
-    $("#otp-live").value = "";
-    feedback(result.valid ? "Code verified." : "Invalid or expired code.");
-  });
-};
