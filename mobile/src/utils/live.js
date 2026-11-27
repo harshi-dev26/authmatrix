@@ -1,4 +1,4 @@
-const endpoint = "https://authmatrix-gxicepaxa-harshibuilds-1048.vercel.app/api/access";
+const endpoint = "https://authmatrix-pwb4olusb-harshibuilds-1048.vercel.app/api/access";
 export async function access(action, fields = {}, token) {
   const r = await fetch(endpoint, {
     method: "POST",
