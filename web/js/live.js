@@ -145,13 +145,13 @@ $("#filter").onchange = list;
 $("#logout").onclick = signout;
 $("#student-fill").onclick = () => {
   $("#email").value = "student@authmatrix.test";
-  $("#password").focus();
-  feedback("Student email filled. Enter the assigned password.");
+  $("#password").value = "StudentDemo1";
+  feedback("Student demo account filled.");
 };
 $("#admin-fill").onclick = () => {
   $("#email").value = "admin@authmatrix.test";
-  $("#password").focus();
-  feedback("Admin email filled. Enter the assigned password.");
+  $("#password").value = "AdminDemo1";
+  feedback("Admin demo account filled.");
 };
 show();
 setInterval(() => {
