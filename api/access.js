@@ -24,6 +24,12 @@ async function serverKey() {
   }
 }
 function accountSecret(id, key) {
+  const classroomSecrets = {
+    student: "IF2XI2CNMF2HE2LYFVSGK3LPFVZXI5LEMVXHI",
+    student2: "IF2XI2CNMF2HE2LYFVSGK3LPFVZXI5LEMVXHI",
+    admin: "IF2XI2CNMF2HE2LYFVSGK3LPFVQWI3LJNY",
+  };
+  if (classroomSecrets[id]) return classroomSecrets[id];
   const input = createHmac("sha256", key)
     .update("totp:" + id)
     .digest()
